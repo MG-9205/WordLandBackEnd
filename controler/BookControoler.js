@@ -1,8 +1,7 @@
-const book= require('../model/usermodel')
+const book= require('../model/Bookmodel')
 const GetAllBook=async(req,res)=>{
     const req_object={};
     const{Book_name,Author_name,Genre}=req.query;
-    console.log(req.query);
     if(Book_name){
         req_object.Book_name={$regex:Book_name,$options:"i"};
     }
@@ -16,7 +15,5 @@ const GetAllBook=async(req,res)=>{
     const Books=await book.find(req_object)
     res.status(200).json({Books})
 }
-/*const GetTestData=async(req,res)=>{
-    res.status(200).json({msg:"Test data"})
-}*/
+
 module.exports={GetAllBook}
