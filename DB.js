@@ -1,6 +1,6 @@
 const mongoose=require("mongoose")
 
-const DB_URI="mongodb://localhost:27017/WordLand"
+const DB_URI=process.env.DATABASE_URL;
 
 
 const connect_Mongo=async()=>{
