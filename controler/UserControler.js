@@ -41,10 +41,14 @@ const SignUp = async (req, res) => {
     const { Email, Username, Password } = req.body;
 
     if (Email && Username && Password) {
-      const existingUser = await User.findOne({ Email });
+      const existingUser = await User.findOne({ $or: [
+        { Email: Email },
+        { Username: Username }
+      ]});
       if (existingUser) {
-        return res.status(400).json({ msg: "Email already in use" });
+        return res.status(400).json({ msg: "Email or Username already in use" });
       }
+
       await User.create({
         Email,
         Username,
@@ -63,10 +67,10 @@ const SignUp = async (req, res) => {
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
+      return res.status(400).json({ msg:'please provide create password contain("#@12AbBC")' });
     }
     console.log(error);
-    res.status(500).json({ msg: "Error creating user", error: error.message });
+    res.status(500).json({ msg: "Error creating user" });
   }
 };
 
@@ -89,12 +93,75 @@ const UserLogin = async (req, res) => {
 
       res.json({ msg: "Login Successful" });
     } else {
-      res.status(401).json({ msg: "Login Failed" });
+      res.status(401).json({ msg: "Username not found" });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ msg: "Error logging in", error: error.message });
+    res.status(500).json({ msg: "Error logging in" });
+  }
+};
+const HandleLibrary = async (req, res) => {
+  const token = req.header('X-Auth');
+  const { bookID } = req.body;
+  const param=req.query
+  if (!token) {
+    return res.status(401).json({ msg: "Failed" });
+  }
+
+  try {
+    const decode = jwt.verify(token, jwtPassword);
+    const Username = decode.username;
+    const user = await User.findOne({ Username });
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    if (param.remove === 'true') {
+      await User.updateOne(
+        { Username },
+        { $pull: { Library: bookID } }
+      );
+
+      return res.json({ msg: "Successfully removed" });
+    } else {
+      const isBookInLibrary = user.Library.includes(bookID);
+
+      if (!isBookInLibrary) {
+        user.Library.push(bookID);
+        await user.save();
+        return res.json({ msg: "Successfully stored" });
+      }
+      return res.json({
+        msg: "Book is already in your Library"
+      });
+    }
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Unable to store" });
+  }
+};
+const sendUserLibrary = async (req, res) => {
+  const token = req.header('X-Auth');
+
+  if (!token) {
+    return res.status(401).json({ msg: "Failed" });
+  }
+
+  try {
+    const { username } = jwt.verify(token, jwtPassword);
+    const user = await User.findOne({ Username: username }).select('Library');
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    return res.status(200).json({ LibraryData: user.Library });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "An internal error occurred" });
   }
 };
 
-module.exports = { SignUp, UserLogin };
+module.exports = { SignUp, UserLogin, HandleLibrary,sendUserLibrary};
