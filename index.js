@@ -21,7 +21,8 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-api-key, X-Auth"
   );
-  res.header("Access-Control-Expose-Headers", "X-Auth"); // Expose the X-Auth header
+  res.header("Access-Control-Expose-Headers", "X-Auth");
+  res.header("Referrer-Policy", "no-referrer-when-downgrade"); 
   if (req.method === "OPTIONS") {
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE");
     return res.status(200).json({});
