@@ -9,7 +9,7 @@ const signUpInputValidation = z.object({
   Email: z.string().email("must be a valid Email"),
   Username: z
     .string()
-    .min(8, { message: "Username must contain at least 8 letters" }),
+    .min(4, { message: "Username must contain at least 8 letters" }),
   Password: z
     .string()
     .min(6, { message: "Password must contain at least 6 letters" })
@@ -67,7 +67,7 @@ const SignUp = async (req, res) => {
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ msg:'please provide create password contain("#@12AbBC")' });
+      return res.status(400).json({ msg: error.errors.map(err => err.message).join(', ') });
     }
     console.log(error);
     res.status(500).json({ msg: "Error creating user" });
